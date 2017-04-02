@@ -1,0 +1,5 @@
+Get current temperature from any city
+
+- Get code: `go get github.com/meo84/hellooow-go`
+- Launch a server: `$GOPATH/bin/hellooow-go`
+- Get the current temperature of the city of your choice by replacing its name on: http:localhost:8080/weather/cityname
