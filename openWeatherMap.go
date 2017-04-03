@@ -4,12 +4,13 @@ import (
   "encoding/json"
   "net/http"
   "fmt"
+  "os"
 )
 
 type openWeatherMap struct{}
 
 func (w openWeatherMap) temperature(city string) (float64, error) {
-  resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=e4ffc4218bdc3443eb310f6695b41fec&q=" + city)
+  resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=" + os.Getenv("OWD_APPID") + "&q=" + city)
   if err != nil {
     return 0, err
   }
