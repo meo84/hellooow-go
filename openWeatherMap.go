@@ -22,8 +22,9 @@ func (w openWeatherMap) temperature(city string) (float64, error) {
     return 0, err
   }
 
-  fmt.Printf("openWeatherMap: %s: %.2f", city, temperature.Main.Kelvin)
-  return temperature.Main.Kelvin, nil
+  temp_celsius := temperature.Main.Kelvin - 273.15
+  fmt.Printf("openWeatherMap: %s: %.2f \n", city,temp_celsius)
+  return temp_celsius, nil
 }
 
 type openWeatherData struct{

@@ -24,9 +24,9 @@ func (w weatherUnderground) temperature(city string) (float64, error) {
     return 0, err
   }
 
-  kelvin := temp.Observation.Celsius + 273.15
-  fmt.Printf("weatherUndergroundMap: %s: %.2f", city, kelvin)
-  return kelvin, nil
+  temp_celsius := temp.Observation.Celsius
+  fmt.Printf("weatherUndergroundMap: %s: %.2f \n", city, temp_celsius)
+  return temp_celsius, nil
 }
 
 type weatherUndergroundData struct{
