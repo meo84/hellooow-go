@@ -7,43 +7,50 @@ import (
 )
 
 func main() {
-  http.HandleFunc("/weather/", weather)
+  mw := multiWeatherProvider{
+    openWeatherMap{},
+    weatherUnderground{apiKey: "need-key"},
+  }
+
+  http.HandleFunc("/weather/", weather(mw))
   http.ListenAndServe(":8080", nil)
 }
 
-func weather(w http.ResponseWriter, r *http.Request) {
-  city := strings.SplitN(r.URL.Path, "/", 3)[2]
+func weather(mw multiWeatherProvider) func(w http.ResponseWriter, r *http.Request) {
+  return func(w http.ResponseWriter, r *http.Request) {
+    city := strings.SplitN(r.URL.Path, "/", 3)[2]
 
-  data, err := query(city)
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    return
+    temp, err := mw.temperature(city)
+    if err != nil {
+      http.Error(w, err.Error(), http.StatusInternalServerError)
+      return
+    }
+
+    w.Header().Set("Content-Type", "application/json; charset=utf-8")
+    json.NewEncoder(w).Encode(map[string]interface{}{
+    "city": city,
+    "temp": temp,
+  })
   }
-
-  w.Header().Set("Content-Type", "application/json; charset=utf-8")
-  json.NewEncoder(w).Encode(data)
 }
 
-func query(city string) (weatherData, error) {
-  resp, err := http.Get("http://api.openweathermap.org/data/2.5/weather?APPID=e4ffc4218bdc3443eb310f6695b41fec&q=" + city)
-  if err != nil {
-    return weatherData{}, err
-  }
-
-  defer resp.Body.Close()
-
-  var d weatherData
-
-  if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
-    return weatherData{}, err
-  }
-
-  return d, nil
+type weatherProvider interface {
+  temperature(city string) (float64, error) //in Kelvin
 }
 
-type weatherData struct {
-  Name string `json:"name"`
-  Main struct {
-    Kelvin float64 `json:"temp"`
-  } `json:"main"`
+type multiWeatherProvider []weatherProvider
+
+func (w multiWeatherProvider) temperature(city string) (float64, error) {
+  sum := 0.0
+
+  for _, provider := range w {
+    k, err := provider.temperature(city)
+    if err != nil {
+      return 0, err
+    }
+
+    sum += k
+  }
+
+  return sum / float64(len(w)), nil
 }
